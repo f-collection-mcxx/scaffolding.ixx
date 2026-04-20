@@ -53,7 +53,7 @@ endfunction()
 
 function(configure_target target)
     scan_target(${target})
-
+    target_include_directories(${target} PUBLIC src)
     target_sources(${target}
             PRIVATE ${${target}_cpp} ${${target}_cu}
 
