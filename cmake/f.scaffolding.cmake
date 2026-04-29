@@ -68,11 +68,19 @@ function(configure_target target)
                 FILES ${${target}_ixx})
     endif ()
     if (${target}_header)
-        target_include_directories(${lib} PUBLIC src)
-        target_sources(${lib}
-                PUBLIC FILE_SET h
-                TYPE HEADERS
-                FILES ${${target}_header})
+        if (target_type STREQUAL "INTERFACE_LIBRARY")
+            target_include_directories(${lib} INTERFACE src)
+            target_sources(${lib}
+                    INTERFACE FILE_SET h
+                    TYPE HEADERS
+                    FILES ${${target}_header})
+        else ()
+            target_include_directories(${lib} PUBLIC src)
+            target_sources(${lib}
+                    PUBLIC FILE_SET h
+                    TYPE HEADERS
+                    FILES ${${target}_header})
+        endif ()
     endif ()
 
 
