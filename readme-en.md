@@ -9,7 +9,8 @@ This is a project scaffolding template using C++23, including a simple example t
 1. Create a repository from this template
 2. Introduce f-project series dependencies
    Place the dependent modules in 3rdparty (or introduce them via git submodule) and register them in the root CMakeLists.txt
-
+3. Introduce vcpkg series dependencies
+   use add_vcpkg_library(name [STATIC]) in root CML (require vcpkg.exe in PATH)
 ## Project Structure
 
 - `3rdparty`: Third-party libraries.

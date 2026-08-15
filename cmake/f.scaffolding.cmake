@@ -1,4 +1,3 @@
-option(BUILD_TEST "build test" ON)
 set(USE_CUDA OFF)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -46,16 +45,8 @@ endfunction()
 function(configure_target target)
     scan_target(${target})
     get_target_property(target_type ${target} TYPE)
-    if (target_type STREQUAL "EXECUTABLE")
-        set(lib ${target}_lib)
-        target_sources(${target} PRIVATE ${${target}_main})
-        add_library(${lib} STATIC)
-        target_link_libraries(${target} PRIVATE ${lib})
-
-    else ()
-        set(lib ${target})
-        list(APPEND ${target}_src ${${target}_main})
-    endif ()
+    set(lib ${target})
+    list(APPEND ${target}_src ${${target}_main})
 
     if (${target}_src)
         target_sources(${lib}
@@ -84,7 +75,7 @@ function(configure_target target)
     endif ()
 
 
-    if (BUILD_TEST)
+    if (BUILD_TEST AND NOT target_type STREQUAL "EXECUTABLE")
         foreach (file ${${target}_test})
             get_filename_component(name ${file} NAME_WLE)
             get_filename_component(name ${name} NAME_WLE)
@@ -92,6 +83,55 @@ function(configure_target target)
             set(test_exe_name "${target}-test__${name}")
             add_executable(${test_exe_name} ${file})
             target_link_libraries(${test_exe_name} PRIVATE ${lib})
+            add_test(NAME ${test_exe_name} COMMAND ${test_exe_name})
         endforeach ()
     endif ()
 endfunction()
+
+
+find_program(VCPKG NAMES vcpkg.exe)
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(TARGET_ARCH x64)
+else()
+    set(TARGET_ARCH x86)
+endif()
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "ARM64|aarch64")
+    set(TARGET_ARCH arm64)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+    set(TARGET_ARCH arm)
+endif()
+
+string(TOLOWER "${TARGET_ARCH}-${CMAKE_SYSTEM_NAME}" target_triple)
+
+if (VCPKG)
+    get_filename_component(VCPKG_ROOT ${VCPKG} DIRECTORY)
+    set(CMAKE_TOOLCHAIN_FILE
+            "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+            CACHE STRING ""
+    )
+#    include_directories(
+#            "${PROJECT_SOURCE_DIR}/.vcpkg/${target_triple}/include"
+#            "${PROJECT_SOURCE_DIR}/.vcpkg/${target_triple}-static/include")
+#    if (${CMAKE_BUILD_TYPE} STREQUAL Debug)
+#        link_directories(
+#                "${PROJECT_SOURCE_DIR}/.vcpkg/${target_triple}/debug/lib"
+#                "${PROJECT_SOURCE_DIR}/.vcpkg/${target_triple}-static/debug/lib" )
+#    else ()
+#        link_directories(
+#                "${PROJECT_SOURCE_DIR}/.vcpkg/${target_triple}/lib"
+#                "${PROJECT_SOURCE_DIR}/.vcpkg/${target_triple}-static/lib" )
+#    endif ()
+    function(add_vcpkg_library name type)
+        string(TOLOWER "${name}:${target_triple}" tgt)
+        if (type STREQUAL STATIC)
+            set(tgt ${tgt}-static)
+        endif ()
+        execute_process(COMMAND ${VCPKG} install ${tgt} --x-install-root=${PROJECT_SOURCE_DIR}/.vcpkg)
+    endfunction()
+else()
+    function(add_vcpkg_library)
+        message(FATAL_ERROR "VCPKG Not Found in Path, disable 'add_vcpkg_library'")
+    endfunction()
+endif ()

@@ -11,9 +11,11 @@ This file is also avaliable under [[English](./readme-en.md)\]
 1. 从此模板创建仓库
 2. 引入f-project系的依赖
    将依赖的module放入3rdparty（或通过git submodule 引入）并在根CMakeList中注册
+3. 引入vcpkg系的依赖
+   使用add_vcpkg_library(name [STATIC]) 引入（需要vcpkg）
 
 ## 项目结构
-
+- `.vcpkg`: vcpkg安装缓存。
 - `3rdparty`: 第三方库。
 - `modules`: 项目的模块，包含源代码和测试文件。
     - `src/`: 源代码目录，包含主要的C++源文件和模块声明文件等。
