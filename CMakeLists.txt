@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
-project(awesome-project)
 include(cmake/f.scaffolding.cmake)
+project(awesome-project)
+
 
 # configure 3rd party modules here
 #add_subdirectory(3rdparty/dep-module)
